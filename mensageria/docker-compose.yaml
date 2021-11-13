@@ -1,0 +1,39 @@
+version: "3.8"
+services:
+    rabbit:
+        image: rabbitmq:3-management
+        ports: 
+            - 5672:5672
+            - 8080:15672
+    filter:
+        build: ./filter
+        volumes:
+            - "./filter/:/code"
+        restart: on-failure
+        depends_on:
+            - "rabbit"
+        command: sh -c '/bin/wait-for-it.sh rabbit:5672 --timeout=30 -- python -u filter.py'
+        environment:
+            AMQP_URL: amqp://guest:guest@rabbit:5672
+    sensor:
+        build: ./sensor
+        volumes:
+            - "./sensor/:/code"
+        restart: on-failure
+        depends_on:
+            - "rabbit"
+        command: sh -c '/bin/wait-for-it.sh rabbit:5672 --timeout=30 -- python -u sensor.py'
+        environment:
+            AMQP_URL: amqp://guest:guest@rabbit:5672
+    climatizador:
+        build: ./climatizador
+        volumes:
+            - "./climatizador/:/code"
+        restart: on-failure
+        depends_on:
+            - "rabbit"
+        command: sh -c '/bin/wait-for-it.sh rabbit:5672 --timeout=30 -- python -u climatizador.py'
+        environment:
+            AMQP_URL: amqp://guest:guest@rabbit:5672
+    
+   
